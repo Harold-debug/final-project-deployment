@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Label Image</title>
+    <style>
+        #canvas {
+            border: 2px solid black;
+            cursor: crosshair;
+        }
+        #controls {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Label Image</h1>
+    <p>Use the mouse to draw a bounding box around the detected area for labeling.</p>
+
+    <!-- Canvas for Drawing Bounding Boxes -->
+    <canvas id="canvas"></canvas>
+    
+    <div id="controls">
+        <label for="label">Label:</label>
+        <input type="text" id="label" name="label" required>
+        <button onclick="submitLabel()">Save Label</button>
+    </div>
+    
+    <!-- Start Training Button -->
+    <div id="training-controls">
+        <button onclick="startTraining()">Start Training</button>
+    </div>
+
+    <script>
+        const img = new Image();
+        img.src = "{{ url_for('static', filename='labeling_uploads/train/images/' + filename) }}";  // Load the image
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let startX, startY, endX, endY, isDrawing = false;
+
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+        };
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+            isDrawing = true;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDrawing) {
+                const rect = canvas.getBoundingClientRect();
+                endX = e.clientX - rect.left;
+                endY = e.clientY - rect.top;
+
+                // Redraw the image and draw the rectangle on top
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        function submitLabel() {
+            const label = document.getElementById('label').value;
+            if (!label) {
+                alert('Please enter a label name.');
+                return;
+            }
+
+            const data = {
+                file: "{{ filename }}",
+                labels: [{
+                    label: label,
+                    x_min: Math.min(startX, endX),
+                    y_min: Math.min(startY, endY),
+                    x_max: Math.max(startX, endX),
+                    y_max: Math.max(startY, endY)
+                }],
+                image_width: canvas.width,
+                image_height: canvas.height
+            };
+
+            fetch("{{ url_for('save_labels') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Label saved successfully!");
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    document.getElementById('label').value = '';  // Clear the label field
+                } else {
+                    alert("Failed to save the label.");
+                }
+            });
+        }
+
+        function startTraining() {
+            fetch("{{ url_for('start_training') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Training started successfully!");
+                } else {
+                    alert("Failed to start training: " + data.message);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

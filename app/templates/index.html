@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload</title>
+</head>
+<body>
+    <h1>Upload an Image</h1>
+    
+    <!-- Form for detection -->
+    <h2>Upload for Detection</h2>
+    <form action="{{ url_for('upload_for_detection') }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Detect</button>
+    </form>
+
+    <!-- Form for labeling -->
+    <h2>Upload for Labeling</h2>
+    <form action="{{ url_for('upload_for_labeling') }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Label</button>
+    </form>
+</body>
+</html>

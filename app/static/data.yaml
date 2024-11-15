@@ -1,0 +1,4 @@
+train: C:\Users\nzooh\OneDrive - aivancity\Desktop\Deployement exercise\Project_root\app\static\labeling_uploads\train     # Path to training images
+val: C:\Users\nzooh\OneDrive - aivancity\Desktop\Deployement exercise\Project_root\app\static\labeling_uploads\train
+nc: 2                                   # Number of classes
+names: ['chips', 'void']                # Class names should match your 

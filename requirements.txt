@@ -1,0 +1,7 @@
+Flask
+torch
+numpy
+opencv-python
+matplotlib
+ultralytics
+segment-anything

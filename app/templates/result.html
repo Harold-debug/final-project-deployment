@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detection Result</title>
+    <style>
+        .image-container {
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Detection Results</h1>
+    <div class="image-container">
+        <h3>Original Image</h3>
+        <img src="{{ url_for('static', filename='detection_uploads/' + original_image) }}" alt="Original Image">
+
+        <h3>Processed Result</h3>
+        <img src="C:\Users\nzooh\OneDrive - aivancity\Desktop\Deployement exercise\Project_root\app\static\detection_uploads\result_03_JPG_jpg.rf.6fca9d3ac8f817b26c021476301814df.jpg" alt="Result Image"> 
+
+        <h3>Detected Areas</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Area ID</th>
+                    <th>Area (pixels²)</th>
+                    <th>Coordinates</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for area in areas %}
+                    <tr>
+                        <td>{{ area.id }}</td>
+                        <td>{{ area.area }}</td>
+                        <td>{{ area.coordinates[0] }}, {{ area.coordinates[1] }} | {{ area.coordinates[2] }}, {{ area.coordinates[3] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
