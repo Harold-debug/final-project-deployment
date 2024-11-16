@@ -28,21 +28,28 @@
             font-size: 1.2rem;
         }
 
+        /* Container for canvas and controls */
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+        }
+
         /* Canvas Styling */
         #canvas {
-            display: block;
-            margin: 20px auto;
             border: 3px solid #333;
             cursor: crosshair;
         }
 
         /* Controls Section */
         #controls {
-            margin: 20px auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
             gap: 10px;
+            max-width: 300px;
         }
 
         #controls label {
@@ -51,8 +58,7 @@
 
         #label {
             padding: 10px;
-            width: 80%;
-            max-width: 400px;
+            width: 100%;
             font-size: 1rem;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -83,24 +89,27 @@
     <h1>Label Image</h1>
     <p>Use the mouse to draw a bounding box around the detected area for labeling.</p>
 
-    <!-- Canvas for Drawing Bounding Boxes -->
-    <canvas id="canvas"></canvas>
-    
-    <!-- Controls for Labeling -->
-    <div id="controls">
-        <label for="label">Enter Label Name:</label>
-        <input type="text" id="label" name="label" placeholder="e.g., Car, Person, Tree" required>
-        <button onclick="submitLabel()">Save Label</button>
-    </div>
+    <!-- Container for Canvas and Controls -->
+    <div class="container">
+        <!-- Canvas for Drawing Bounding Boxes -->
+        <canvas id="canvas"></canvas>
 
-    <!-- Training Button -->
-    <div id="training-controls">
-        <button onclick="startTraining()">Start Training</button>
+        <!-- Controls for Labeling -->
+        <div id="controls">
+            <label for="label">Enter Label Name:</label>
+            <input type="text" id="label" name="label" placeholder="void or chips?" required>
+            <button onclick="submitLabel()">Save Label</button>
+
+            <!-- Training Button -->
+            <div id="training-controls">
+                <button onclick="startTraining()">Start Training</button>
+            </div>
+        </div>
     </div>
 
     <script>
         const img = new Image();
-        img.src = "{{ url_for('static', filename='labeling_uploads/train/images/' + filename) }}";  // Load the image
+        img.src = "{{ url_for('serve_datasets', filename='labeling_uploads/train/images/' + filename) }}";  // Load the image
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
@@ -190,7 +199,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === "success") {
-                    alert("Training started successfully!");
+                    alert("Training successful!");
                 } else {
                     alert("Failed to start training: " + data.message);
                 }
