@@ -48,6 +48,8 @@ def download_file(url, destination):
 
 # Check if models exist, if not download them
 def ensure_models_downloaded():
+    # Create the 'models' directory if it does not exist
+    os.makedirs(os.path.dirname(YOLO_MODEL_PATH), exist_ok=True)
     if not os.path.exists(YOLO_MODEL_PATH):
         download_file(YOLO_MODEL_URL, YOLO_MODEL_PATH)
     
