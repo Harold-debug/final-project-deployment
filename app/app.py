@@ -1,4 +1,5 @@
 import os
+import requests
 from flask import Flask, request, render_template, redirect, url_for, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import cv2
@@ -27,13 +28,38 @@ os.makedirs(TRAINING_FOLDER, exist_ok=True)
 os.makedirs(LABELS_FOLDER, exist_ok=True)
 os.makedirs(IMAGES_FOR_TRAINING, exist_ok=True)
 
-# Define paths to model weights and dataset configuration file
-MODEL_PATH = os.path.join('models', 'best.pt')
-DATASET_PATH = os.path.join(PROJECT_ROOT, 'static', 'data.yaml')
+# Define model URLs and paths
+YOLO_MODEL_URL = "https://github.com/Harold-debug/final-project-deployment/releases/download/yolo-model/best.pt"
+SAM_MODEL_URL = "https://github.com/Harold-debug/final-project-deployment/releases/download/sam-checkpointer/sam_vit_l_0b3195.pth"
+YOLO_MODEL_PATH = os.path.join('models', 'best.pt')
+SAM_MODEL_PATH = os.path.join('models', 'sam_vit_l_0b3195.pth')
+
+# Function to download files from GitHub
+def download_file(url, destination):
+    print(f"Downloading model from {url} to {destination}")
+    response = requests.get(url, stream=True)
+    if response.status_code == 200:
+        with open(destination, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        print(f"Downloaded successfully: {destination}")
+    else:
+        print(f"Failed to download {url}: {response.status_code}")
+
+# Check if models exist, if not download them
+def ensure_models_downloaded():
+    if not os.path.exists(YOLO_MODEL_PATH):
+        download_file(YOLO_MODEL_URL, YOLO_MODEL_PATH)
+    
+    if not os.path.exists(SAM_MODEL_PATH):
+        download_file(SAM_MODEL_URL, SAM_MODEL_PATH)
+
+# Ensure models are downloaded when app starts
+ensure_models_downloaded()
 
 # Load YOLO and SAM models
-yolo_model = YOLO(MODEL_PATH)
-sam = sam_model_registry["vit_l"](checkpoint=os.path.join( "models", "sam_vit_l_0b3195.pth"))
+yolo_model = YOLO(YOLO_MODEL_PATH)
+sam = sam_model_registry["vit_l"](checkpoint=SAM_MODEL_PATH)
 sam_predictor = SamPredictor(sam)
 
 # Class ID mapping
