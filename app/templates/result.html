@@ -5,8 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detection Result</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        /* Back Button Styling */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body class="bg-light">
+    <!-- Back to Home Button -->
+    <div class="back-button">
+        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">&larr; Back to Home</a>
+    </div>
+
     <div class="container mt-5">
         <h1 class="text-center">Detection Results</h1>
 
@@ -18,7 +32,7 @@
             </div>
             <div class="col-md-6 text-center">
                 <h3>Processed Result</h3>
-                <img src="{{ url_for('serve_datasets',filename='detection_uploads/' + result_image) }}" class="img-fluid border" alt="Result Image">
+                <img src="{{ url_for('serve_datasets', filename='detection_uploads/' + result_image) }}" class="img-fluid border" alt="Result Image">
             </div>
         </div>
 
