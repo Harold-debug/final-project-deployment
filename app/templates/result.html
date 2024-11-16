@@ -10,16 +10,16 @@
     <div class="container mt-5">
         <h1 class="text-center">Detection Results</h1>
 
-        <!-- Original Image -->
-        <div class="text-center mt-4">
-            <h3>Original Image</h3>
-            <img src="{{ url_for('static', filename='detection_uploads/' + original_image) }}" class="img-fluid border" alt="Original Image">
-        </div>
-
-        <!-- Processed Result -->
-        <div class="text-center mt-4">
-            <h3>Processed Result</h3>
-            <img src="{{ url_for('static', filename='detection_uploads/' + result_image) }}" class="img-fluid border" alt="Result Image">
+        <!-- Original and Processed Images Side by Side -->
+        <div class="row mt-4">
+            <div class="col-md-6 text-center">
+                <h3>Original Image</h3>
+                <img src="{{ url_for('serve_datasets', filename='detection_uploads/' + original_image) }}" class="img-fluid border" alt="Original Image">
+            </div>
+            <div class="col-md-6 text-center">
+                <h3>Processed Result</h3>
+                <img src="{{ url_for('serve_datasets',filename='detection_uploads/' + result_image) }}" class="img-fluid border" alt="Result Image">
+            </div>
         </div>
 
         <!-- Detected Areas -->
