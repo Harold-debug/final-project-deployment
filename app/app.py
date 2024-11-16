@@ -189,7 +189,7 @@ def start_training():
         
         # Collect image paths to display from the most recent folder
         images_to_display = [
-            'confusion_matrix_normalized.png',
+            'results.png',
             'F1_curve.png',
             'train_batch0.jpg',
             'train_batch1.jpg'
@@ -253,4 +253,4 @@ def serve_runs(filename):
     
 if __name__ == '__main__':
     # app.run(debug=True)
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
