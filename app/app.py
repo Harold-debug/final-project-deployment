@@ -5,6 +5,7 @@ import cv2
 from ultralytics import YOLO
 from segment_anything import SamPredictor, sam_model_registry
 from package.utils import run_detection, save_new_labels
+import shutil
 
 app = Flask(__name__, static_folder='static')
 
@@ -140,6 +141,14 @@ def start_training():
         # Start training with dataset configuration
         results = model.train(data=DATASET_PATH, epochs=10, imgsz=640)
 
+        # After training, move or copy the new best.pt model to the models folder
+        new_best_model_path = os.path.join(PROJECT_ROOT, 'runs', 'detect', 'train24', 'weights', 'best.pt')
+        
+        # Ensure the old model is overridden with the new one
+        if os.path.exists(new_best_model_path):
+            shutil.copy(new_best_model_path, MODEL_PATH)  # Copy new model to 'models' folder
+            print(f"New best model saved to {MODEL_PATH}")
+        
         # Return success message after training
         return jsonify({"status": "success", "message": "YOLO model training completed!"})
 
@@ -155,3 +164,4 @@ def serve_datasets(filename):
 
 if __name__ == '__main__':
     app.run(debug=True)
+    # app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
