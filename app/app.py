@@ -167,16 +167,44 @@ def start_training():
         # Start training with dataset configuration
         results = model.train(data=DATASET_PATH, epochs=10, imgsz=640)
 
-        # After training, move or copy the new best.pt model to the models folder
-        new_best_model_path = os.path.join(PROJECT_ROOT, 'runs', 'detect', 'train24', 'weights', 'best.pt')
+        # Find the most recent training directory by sorting based on creation time
+        runs_detect_path = os.path.join(PROJECT_ROOT, 'runs', 'detect')
         
-        # Ensure the old model is overridden with the new one
+        # Get all subdirectories within 'runs/detect'
+        training_folders = [f for f in os.listdir(runs_detect_path) if os.path.isdir(os.path.join(runs_detect_path, f))]
+
+        # Find the most recent folder by creation time (newest first)
+        most_recent_folder = max(training_folders, key=lambda folder: os.path.getctime(os.path.join(runs_detect_path, folder)))
+        
+        # Path to the most recent training folder
+        most_recent_path = os.path.join(runs_detect_path, most_recent_folder)
+        
+        # Path to the best.pt model in the latest training folder
+        new_best_model_path = os.path.join(most_recent_path, 'weights', 'best.pt')
+        
+        # Check if 'best.pt' exists and copy it to the model directory
         if os.path.exists(new_best_model_path):
             shutil.copy(new_best_model_path, MODEL_PATH)  # Copy new model to 'models' folder
             print(f"New best model saved to {MODEL_PATH}")
         
-        # Return success message after training
-        return jsonify({"status": "success", "message": "YOLO model training completed!"})
+        # Collect image paths to display from the most recent folder
+        images_to_display = [
+            'confusion_matrix_normalized.png',
+            'F1_curve.png',
+            'train_batch0.jpg',
+            'train_batch1.jpg'
+        ]
+        
+       # Convert image file names to their relative paths, assuming they're in the training folder (not in weights)
+        image_paths = [os.path.relpath(os.path.join(most_recent_path, img), runs_detect_path) 
+                       for img in images_to_display if os.path.exists(os.path.join(most_recent_path, img))]
+        print("Image Paths:", image_paths)
+        # Return success message and image paths for frontend
+        return jsonify({
+            "status": "success",
+            "message": "YOLO model training completed!",
+            "images": images_to_display
+        })
 
     except Exception as e:
         # Return error message if training fails
@@ -188,6 +216,41 @@ def start_training():
 def serve_datasets(filename):
     return send_from_directory(os.path.join(PROJECT_ROOT, 'datasets'), filename)
 
+# Define the path to the 'runs/detect' folder
+RUNS_DETECT_PATH = os.path.join(PROJECT_ROOT, 'runs', 'detect')
+
+# Serve all files from the 'runs/detect' folder
+@app.route('/runs/<path:filename>')
+def serve_runs(filename):
+    try:
+        # Get the most recent training folder within 'runs/detect'
+        training_folders = [f for f in os.listdir(RUNS_DETECT_PATH) if os.path.isdir(os.path.join(RUNS_DETECT_PATH, f))]
+        if not training_folders:
+            return "No training folders found", 404
+
+        most_recent_folder = max(training_folders, key=lambda folder: os.path.getctime(os.path.join(RUNS_DETECT_PATH, folder)))
+
+        # Define the path to the most recent folder
+        most_recent_path = os.path.join(RUNS_DETECT_PATH, most_recent_folder)
+
+        # Log for debugging: print paths
+        print(f"Serving files from: {most_recent_path}")
+        print(f"Requested file: {filename}")
+
+        # Ensure the file exists in the directory
+        file_path = os.path.join(most_recent_path, filename)
+        if os.path.exists(file_path):
+            print(f"File exists: {file_path}")  # Print the confirmed file path
+            return send_from_directory(most_recent_path, filename)
+        else:
+            print(f"File not found: {file_path}")  # Log the error if file doesn't exist
+            return f"File not found: {filename}", 404
+
+    except Exception as e:
+        # Log and return error if something goes wrong
+        print(f"Error serving file: {str(e)}")
+        return "Error serving file", 500
+    
 if __name__ == '__main__':
-    app.run(debug=True)
-    # app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
+    # app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
