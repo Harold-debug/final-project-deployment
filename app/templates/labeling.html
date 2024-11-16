@@ -79,9 +79,29 @@
             background-color: #45a049;
         }
 
-        /* Training Controls */
-        #training-controls {
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            margin: 20px auto;
+        }
+
+        .loading img {
+            width: 50px;
+            height: 50px;
+        }
+
+        /* Success Message */
+        .success-message {
             margin-top: 20px;
+            color: green;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Success Button */
+        #success-button {
+            margin-top: 20px;
+            display: none;
         }
     </style>
 </head>
@@ -102,8 +122,20 @@
 
             <!-- Training Button -->
             <div id="training-controls">
-                <button onclick="startTraining()">Start Training</button>
+                <button id="start-training-button" onclick="startTraining()">Start Training</button>
+                <div class="loading" id="loading-spinner">
+                    <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading...">
+                    <p>Training in progress...</p>
+                </div>
             </div>
+
+            <!-- Success Button -->
+            <div id="success-button">
+                <button onclick="goHome()">Go to Home Page</button>
+            </div>
+
+            <!-- Success Message -->
+            <div id="success-message" class="success-message" style="display: none;"></div>
         </div>
     </div>
 
@@ -112,6 +144,10 @@
         img.src = "{{ url_for('serve_datasets', filename='labeling_uploads/train/images/' + filename) }}";  // Load the image
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const startTrainingButton = document.getElementById('start-training-button');
+        const successButton = document.getElementById('success-button');
+        const successMessage = document.getElementById('success-message');
         
         let startX, startY, endX, endY, isDrawing = false;
 
@@ -136,8 +172,6 @@
                 const rect = canvas.getBoundingClientRect();
                 endX = e.clientX - rect.left;
                 endY = e.clientY - rect.top;
-
-                // Redraw the image and overlay the rectangle
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0);
                 ctx.strokeStyle = 'red';
@@ -179,31 +213,41 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.status === "success") {
-                    alert("Label saved successfully!");
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                    document.getElementById('label').value = '';  // Clear label input
-                } else {
-                    alert("Failed to save the label.");
-                }
+                alert(data.status === "success" ? "Label saved successfully!" : "Failed to save the label.");
             });
         }
 
-        // Trigger training process
+        // Start training with visual feedback
         function startTraining() {
+            startTrainingButton.style.display = 'none';
+            loadingSpinner.style.display = 'block';
+            successMessage.style.display = 'none'; // Hide previous success message
+
             fetch("{{ url_for('start_training') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
             })
             .then(response => response.json())
             .then(data => {
+                loadingSpinner.style.display = 'none';
+
                 if (data.status === "success") {
-                    alert("Training successful!");
+                    successMessage.textContent = 'Training completed successfully!';
+                    successMessage.style.color = 'green';
+                    successMessage.style.display = 'block';
+                    successButton.style.display = 'block';
                 } else {
-                    alert("Failed to start training: " + data.message);
+                    successMessage.textContent = 'Training failed: ' + data.message;
+                    successMessage.style.color = 'red';
+                    successMessage.style.display = 'block';
+                    startTrainingButton.style.display = 'block';
                 }
             });
+        }
+
+        // Navigate to home page
+        function goHome() {
+            window.location.href = "{{ url_for('home') }}";
         }
     </script>
 </body>
