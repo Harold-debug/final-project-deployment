@@ -1,0 +1,4 @@
+train: labeling_uploads/train     # Path to training images
+val: labeling_uploads/train
+nc: 2                                   # Number of classes
+names: ['chips', 'void']                # Class names should match your 
