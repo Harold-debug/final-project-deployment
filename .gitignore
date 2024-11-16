@@ -137,7 +137,7 @@ venv.bak/
 .vscode/
 
 # Model files
-models/*.pt
+# models/*.pt
 
 # Training runs
 runs/

@@ -2,14 +2,106 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Label Image</title>
     <style>
+        /* General Page Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+        }
+
+        h1 {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px 0;
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        p {
+            margin: 10px auto;
+            font-size: 1.2rem;
+        }
+
+        /* Container for canvas and controls */
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* Canvas Styling */
         #canvas {
-            border: 2px solid black;
+            border: 3px solid #333;
             cursor: crosshair;
         }
+
+        /* Controls Section */
         #controls {
-            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            max-width: 300px;
+        }
+
+        #controls label {
+            font-size: 1rem;
+        }
+
+        #label {
+            padding: 10px;
+            width: 100%;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            margin: 20px auto;
+        }
+
+        .loading img {
+            width: 50px;
+            height: 50px;
+        }
+
+        /* Success Message */
+        .success-message {
+            margin-top: 20px;
+            color: green;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Success Button */
+        #success-button {
+            margin-top: 20px;
+            display: none;
         }
     </style>
 </head>
@@ -17,34 +109,56 @@
     <h1>Label Image</h1>
     <p>Use the mouse to draw a bounding box around the detected area for labeling.</p>
 
-    <!-- Canvas for Drawing Bounding Boxes -->
-    <canvas id="canvas"></canvas>
-    
-    <div id="controls">
-        <label for="label">Label:</label>
-        <input type="text" id="label" name="label" required>
-        <button onclick="submitLabel()">Save Label</button>
-    </div>
-    
-    <!-- Start Training Button -->
-    <div id="training-controls">
-        <button onclick="startTraining()">Start Training</button>
+    <!-- Container for Canvas and Controls -->
+    <div class="container">
+        <!-- Canvas for Drawing Bounding Boxes -->
+        <canvas id="canvas"></canvas>
+
+        <!-- Controls for Labeling -->
+        <div id="controls">
+            <label for="label">Enter Label Name:</label>
+            <input type="text" id="label" name="label" placeholder="void or chips?" required>
+            <button onclick="submitLabel()">Save Label</button>
+
+            <!-- Training Button -->
+            <div id="training-controls">
+                <button id="start-training-button" onclick="startTraining()">Start Training</button>
+                <div class="loading" id="loading-spinner">
+                    <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading...">
+                    <p>Training in progress...</p>
+                </div>
+            </div>
+
+            <!-- Success Button -->
+            <div id="success-button">
+                <button onclick="goHome()">Go to Home Page</button>
+            </div>
+
+            <!-- Success Message -->
+            <div id="success-message" class="success-message" style="display: none;"></div>
+        </div>
     </div>
 
     <script>
         const img = new Image();
-        img.src = "{{ url_for('static', filename='labeling_uploads/train/images/' + filename) }}";  // Load the image
+        img.src = "{{ url_for('serve_datasets', filename='labeling_uploads/train/images/' + filename) }}";  // Load the image
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const startTrainingButton = document.getElementById('start-training-button');
+        const successButton = document.getElementById('success-button');
+        const successMessage = document.getElementById('success-message');
         
         let startX, startY, endX, endY, isDrawing = false;
 
+        // Load the image into the canvas
         img.onload = () => {
             canvas.width = img.width;
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
         };
 
+        // Start drawing bounding box
         canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
             startX = e.clientX - rect.left;
@@ -52,13 +166,12 @@
             isDrawing = true;
         });
 
+        // Update bounding box while moving mouse
         canvas.addEventListener('mousemove', (e) => {
             if (isDrawing) {
                 const rect = canvas.getBoundingClientRect();
                 endX = e.clientX - rect.left;
                 endY = e.clientY - rect.top;
-
-                // Redraw the image and draw the rectangle on top
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0);
                 ctx.strokeStyle = 'red';
@@ -67,12 +180,14 @@
             }
         });
 
+        // End drawing
         canvas.addEventListener('mouseup', () => {
             isDrawing = false;
         });
 
+        // Submit label to the server
         function submitLabel() {
-            const label = document.getElementById('label').value;
+            const label = document.getElementById('label').value.trim();
             if (!label) {
                 alert('Please enter a label name.');
                 return;
@@ -98,30 +213,41 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.status === "success") {
-                    alert("Label saved successfully!");
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                    document.getElementById('label').value = '';  // Clear the label field
-                } else {
-                    alert("Failed to save the label.");
-                }
+                alert(data.status === "success" ? "Label saved successfully!" : "Failed to save the label.");
             });
         }
 
+        // Start training with visual feedback
         function startTraining() {
+            startTrainingButton.style.display = 'none';
+            loadingSpinner.style.display = 'block';
+            successMessage.style.display = 'none'; // Hide previous success message
+
             fetch("{{ url_for('start_training') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
             })
             .then(response => response.json())
             .then(data => {
+                loadingSpinner.style.display = 'none';
+
                 if (data.status === "success") {
-                    alert("Training started successfully!");
+                    successMessage.textContent = 'Training completed successfully!';
+                    successMessage.style.color = 'green';
+                    successMessage.style.display = 'block';
+                    successButton.style.display = 'block';
                 } else {
-                    alert("Failed to start training: " + data.message);
+                    successMessage.textContent = 'Training failed: ' + data.message;
+                    successMessage.style.color = 'red';
+                    successMessage.style.display = 'block';
+                    startTrainingButton.style.display = 'block';
                 }
             });
+        }
+
+        // Navigate to home page
+        function goHome() {
+            window.location.href = "{{ url_for('home') }}";
         }
     </script>
 </body>
