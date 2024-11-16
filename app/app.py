@@ -1,41 +1,43 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify
-from werkzeug.utils import secure_filename
 import os
+from flask import Flask, request, render_template, redirect, url_for, jsonify, send_from_directory
+from werkzeug.utils import secure_filename
 import cv2
 from ultralytics import YOLO
 from segment_anything import SamPredictor, sam_model_registry
 from package.utils import run_detection, save_new_labels
+import shutil
 
 app = Flask(__name__, static_folder='static')
 
-# Directory paths for labeling and detection uploads
-LABELING_UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'labeling_uploads')
-DETECTION_UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'detection_uploads')
+# Define project root
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(PROJECT_ROOT)
 
-# Create folders if they don't exist
+# Directory paths for labeling and detection uploads
+LABELING_UPLOAD_FOLDER = os.path.join(PROJECT_ROOT, 'datasets', 'labeling_uploads')
+DETECTION_UPLOAD_FOLDER = os.path.join(PROJECT_ROOT, 'datasets', 'detection_uploads')
+TRAINING_FOLDER = os.path.join(PROJECT_ROOT, 'datasets', 'labeling_uploads', 'train')
+LABELS_FOLDER = os.path.join(TRAINING_FOLDER, 'labels')
+IMAGES_FOR_TRAINING = os.path.join(TRAINING_FOLDER, 'images')
+
+# Create necessary folders if they don't exist
 os.makedirs(LABELING_UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DETECTION_UPLOAD_FOLDER, exist_ok=True)
-
-#Path for saving data for pretrained model
-TRAINING_FOLDER = os.path.join(app.root_path,'static/labeling_uploads', 'train')
 os.makedirs(TRAINING_FOLDER, exist_ok=True)
-
-LABELS_FOLDER = os.path.join(app.root_path, 'static/labeling_uploads/train', 'labels') 
 os.makedirs(LABELS_FOLDER, exist_ok=True)
-
-IMAGES_FOR_TRAINING = os.path.join(app.root_path,'static/labeling_uploads/train', 'images')
 os.makedirs(IMAGES_FOR_TRAINING, exist_ok=True)
 
+# Define paths to model weights and dataset configuration file
+MODEL_PATH = os.path.join('models', 'best.pt')
+DATASET_PATH = os.path.join(PROJECT_ROOT, 'static', 'data.yaml')
+
 # Load YOLO and SAM models
-yolo_model = YOLO('models/best.pt')
-sam = sam_model_registry["vit_l"](checkpoint="models/sam_vit_l_0b3195.pth")
+yolo_model = YOLO(MODEL_PATH)
+sam = sam_model_registry["vit_l"](checkpoint=os.path.join( "models", "sam_vit_l_0b3195.pth"))
 sam_predictor = SamPredictor(sam)
 
 # Class ID mapping
-class_mapping = {
-    "chips": 0,
-    "void": 1,
-}
+class_mapping = {"chips": 0, "void": 1}
 
 @app.route('/')
 def home():
@@ -61,10 +63,7 @@ def upload_for_detection():
     cv2.imwrite(result_path, detected_img)
     
     # Pass the result image path and areas to the result template
-    return render_template('result.html', result_image=result_path, areas=areas, original_image=filename)
-
-
-
+    return render_template('result.html', result_image=result_filename, areas=areas, original_image=filename)
 
 # Route to handle image upload for labeling
 @app.route('/upload_for_labeling', methods=['POST'])
@@ -121,10 +120,9 @@ def save_labels():
 
     return jsonify({"status": "success", "message": "Labels saved successfully in YOLO format."})
 
-
 # Define paths to model weights and dataset configuration file
 MODEL_PATH = os.path.join('models', 'best.pt')  # Path to pretrained YOLO model weights
-DATASET_PATH = os.path.join('app', 'static', 'data.yaml')  # Path to data.yaml configuration
+DATASET_PATH = os.path.join(PROJECT_ROOT,'datasets', 'data.yaml')  # Path to data.yaml configuration
 
 @app.route('/start_training', methods=['POST'])
 def start_training():
@@ -132,44 +130,38 @@ def start_training():
         # Initialize YOLO model with existing weights
         model = YOLO(MODEL_PATH)
         
-        # Ensure dataset configuration exists before training
+        # Check if dataset configuration file exists
         if not os.path.exists(DATASET_PATH):
             return jsonify({"status": "error", "message": f"Dataset configuration file not found at {DATASET_PATH}"}), 400
         
-        # Start training 
-        results = model.train(data=DATASET_PATH, epochs=10, imgsz=640)  #10 epochs for quick demo
+        # Log paths for debugging
+        print(f"Model path: {MODEL_PATH}")
+        print(f"Dataset path: {DATASET_PATH}")
+        
+        # Start training with dataset configuration
+        results = model.train(data=DATASET_PATH, epochs=10, imgsz=640)
 
-        # After training completes, return a success message
+        # After training, move or copy the new best.pt model to the models folder
+        new_best_model_path = os.path.join(PROJECT_ROOT, 'runs', 'detect', 'train24', 'weights', 'best.pt')
+        
+        # Ensure the old model is overridden with the new one
+        if os.path.exists(new_best_model_path):
+            shutil.copy(new_best_model_path, MODEL_PATH)  # Copy new model to 'models' folder
+            print(f"New best model saved to {MODEL_PATH}")
+        
+        # Return success message after training
         return jsonify({"status": "success", "message": "YOLO model training completed!"})
 
     except Exception as e:
-        # Return error message in case of failure
+        # Return error message if training fails
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+# Serve files from the 'datasets' folder
+@app.route('/datasets/<path:filename>')
+def serve_datasets(filename):
+    return send_from_directory(os.path.join(PROJECT_ROOT, 'datasets'), filename)
+
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
