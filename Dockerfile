@@ -19,7 +19,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt --root-user-action=ignore
 
 # Copy the entire project
-COPY . .
+COPY . /app
+
+# Ensure the models directory exists in the container
+RUN mkdir -p /app/models
 
 # Set environment variables for Flask
 ENV FLASK_ENV=production
