@@ -5,3 +5,5 @@ opencv-python
 matplotlib
 ultralytics
 segment-anything
+git-lfs
+gunicorn
