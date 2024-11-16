@@ -103,6 +103,30 @@
             margin-top: 20px;
             display: none;
         }
+
+        /* Image display styling */
+        .training-images {
+            display: grid; /* Use CSS Grid layout */
+            grid-template-columns: repeat(2, 1fr); /* Two equal-width columns */
+            grid-auto-rows: auto; /* Automatically size rows based on image height */
+            gap: 20px; /* Space between images */
+            margin-top: 20px;
+            padding: 10px;
+            justify-items: center; /* Center images horizontally in their grid cells */
+        }
+
+        .training-images img {
+            max-width: 200px; /* Ensure images fit well */
+            height: auto;
+            border: 3px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .training-images img:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -136,6 +160,11 @@
 
             <!-- Success Message -->
             <div id="success-message" class="success-message" style="display: none;"></div>
+
+            <!-- Training Images -->
+            <div id="training-images" class="training-images" style="display: none;">
+                <!-- Images will be displayed here -->
+            </div>
         </div>
     </div>
 
@@ -148,6 +177,7 @@
         const startTrainingButton = document.getElementById('start-training-button');
         const successButton = document.getElementById('success-button');
         const successMessage = document.getElementById('success-message');
+        const trainingImagesContainer = document.getElementById('training-images');
         
         let startX, startY, endX, endY, isDrawing = false;
 
@@ -236,12 +266,27 @@
                     successMessage.style.color = 'green';
                     successMessage.style.display = 'block';
                     successButton.style.display = 'block';
+
+                    // Display images after training
+                    displayTrainingImages(data.images);
                 } else {
                     successMessage.textContent = 'Training failed: ' + data.message;
                     successMessage.style.color = 'red';
                     successMessage.style.display = 'block';
                     startTrainingButton.style.display = 'block';
                 }
+            });
+        }
+
+        // Display images after training
+        function displayTrainingImages(images) {
+            trainingImagesContainer.style.display = 'flex'; // Make image container visible
+
+            images.forEach(image => {
+                const imgElement = document.createElement('img');
+                imgElement.src = "{{ url_for('serve_runs', filename='') }}" + image;
+                imgElement.alt = image;
+                trainingImagesContainer.appendChild(imgElement);
             });
         }
 
