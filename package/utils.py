@@ -43,7 +43,14 @@ def run_detection(yolo_model, sam_predictor, image_path):
     logger.debug(f"YOLO detected {len(results[0].boxes)} objects")
     
     voids = []
-    for idx, (box, confidence, cls) in enumerate(zip(results[0].boxes.xyxy, results[0].boxes.conf, results[0].boxes.cls)):
+    boxes = results[0].boxes
+    num_boxes = len(boxes)
+    
+    # Determine the number of boxes to process
+    num_to_process = min(num_boxes, 10)
+    
+    # Process only the first 10 items if there are 10 or more, otherwise process all
+    for idx, (box, confidence, cls) in enumerate(zip(boxes.xyxy[:num_to_process], boxes.conf[:num_to_process], boxes.cls[:num_to_process])):
         xmin, ymin, xmax, ymax = map(int, box.tolist())
         area = (xmax - xmin) * (ymax - ymin)  # Calculate area
         
@@ -72,11 +79,3 @@ def run_detection(yolo_model, sam_predictor, image_path):
             img[mask] = (0, 255, 0)  # Highlight mask in green
         
     return img, voids
-
-
-
-
-
-
-
-
