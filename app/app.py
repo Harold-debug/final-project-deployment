@@ -7,6 +7,8 @@ from ultralytics import YOLO
 from segment_anything import SamPredictor, sam_model_registry
 from package.utils import run_detection, save_new_labels
 import shutil
+from loguru import logger
+
 
 app = Flask(__name__, static_folder='static')
 
@@ -76,19 +78,24 @@ def home():
 def upload_for_detection():
     if 'file' not in request.files:
         return redirect(url_for('home'))
+    logger.info("File uploaded")
     
     file = request.files['file']
     filename = secure_filename(file.filename)
     original_path = os.path.join(DETECTION_UPLOAD_FOLDER, filename)
     file.save(original_path)
+    logger.info(f"File saved to {original_path}")
     
+    logger.info("We start Running detection")
     # Run YOLO + SAM detection and get detected image and void details
     detected_img, areas = run_detection(yolo_model, sam_predictor, original_path)
+    logger.info("Detection completed")
     
     # Save the processed result image
     result_filename = f'result_{filename}'
     result_path = os.path.join(DETECTION_UPLOAD_FOLDER, result_filename)
     cv2.imwrite(result_path, detected_img)
+    logger.info(f"Result saved to {result_path}")
     
     # Pass the result image path and areas to the result template
     return render_template('result.html', result_image=result_filename, areas=areas, original_image=filename)
