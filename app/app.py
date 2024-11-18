@@ -167,7 +167,7 @@ def start_training():
         print(f"Dataset path: {DATASET_PATH}")
         
         # Start training with dataset configuration
-        results = model.train(data=DATASET_PATH, epochs=10, imgsz=640)
+        results = model.train(data=DATASET_PATH, epochs=3, imgsz=640)
 
         # Find the most recent training directory by sorting based on creation time
         runs_detect_path = os.path.join(PROJECT_ROOT, 'runs', 'detect')
