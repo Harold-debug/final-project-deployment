@@ -1,6 +1,7 @@
 import json
 import cv2
 import numpy as np
+from loguru import logger
 
 LABELS_FILE_PATH = 'retrain_data.txt'  # Central file for YOLO-format labels
 
@@ -35,9 +36,11 @@ def run_detection(yolo_model, sam_predictor, image_path):
     """
     # Load the image
     img = cv2.imread(image_path)
-    
+    logger.debug(f"Loaded image with shape: {img.shape}")
     # Run YOLO inference
+    logger.debug("Running YOLO inference...")
     results = yolo_model(img)
+    logger.debug(f"YOLO detected {len(results[0].boxes)} objects")
     
     voids = []
     for idx, (box, confidence, cls) in enumerate(zip(results[0].boxes.xyxy, results[0].boxes.conf, results[0].boxes.cls)):
@@ -53,14 +56,17 @@ def run_detection(yolo_model, sam_predictor, image_path):
         }
         voids.append(void_info)
         
+        logger.debug("we start the sam predictor")
         # Apply SAM for precise mask
         sam_predictor.set_image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        logger.debug("we set the image")
         masks, _, _ = sam_predictor.predict(
             point_coords=np.array([[xmin, ymin]], dtype=np.float32),
             point_labels=np.array([1]),
             box=np.array([xmin, ymin, xmax, ymax], dtype=np.float32)
         )
         
+        logger.debug(f"Got {len(masks)} masks")
         if masks is not None and len(masks) > 0:
             mask = masks[0].astype(bool)
             img[mask] = (0, 255, 0)  # Highlight mask in green
