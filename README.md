@@ -94,12 +94,12 @@ The application follows a modular architecture with the following components:
 ## Project Images
 
 ### Home
-![Home](./project_images/Screenshot_2023-11-19_at_01.49.38.png)
+![Home](./project_images/Screenshot_2023-11-19_at_01.49.38.png?raw=true)
 
 ### Labeling Interface
-![Labeling Interface](./project_images/Screenshot_2023-11-19_at_01.53.34.png)
+![Labeling Interface](./project_images/Screenshot_2023-11-19_at_01.53.34.png?raw=true)
 
 ### Detection Results
-![Detection Results 1](./project_images/Screenshot_2023-11-19_at_01.59.04.png)
+![Detection Results 1](./project_images/Screenshot_2023-11-19_at_01.59.04.png?raw=true)
 
-![Detection Results 2](./project_images/Screenshot_2023-11-19_at_01.59.10.png)
+![Detection Results 2](./project_images/Screenshot_2023-11-19_at_01.59.10.png?raw=true)
