@@ -16,5 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose the desired port (optional, adjust if necessary)
 EXPOSE 8000
 
+
 # Start the application with Gunicorn
 CMD ["gunicorn", "app.app:app", "--workers", "2", "--timeout", "1200"]
