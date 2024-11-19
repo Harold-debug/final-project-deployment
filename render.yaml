@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: deployment-cv-flask-app
-    env: docker
-    dockerfilePath: Dockerfile
-    envVars:
-      - key: FLASK_ENV
-        value: production
