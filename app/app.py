@@ -7,6 +7,8 @@ from ultralytics import YOLO
 from segment_anything import SamPredictor, sam_model_registry
 from package.utils import run_detection, save_new_labels
 import shutil
+from loguru import logger
+
 
 app = Flask(__name__, static_folder='static')
 
@@ -48,6 +50,8 @@ def download_file(url, destination):
 
 # Check if models exist, if not download them
 def ensure_models_downloaded():
+    # Create the 'models' directory if it does not exist
+    os.makedirs(os.path.dirname(YOLO_MODEL_PATH), exist_ok=True)
     if not os.path.exists(YOLO_MODEL_PATH):
         download_file(YOLO_MODEL_URL, YOLO_MODEL_PATH)
     
@@ -74,19 +78,24 @@ def home():
 def upload_for_detection():
     if 'file' not in request.files:
         return redirect(url_for('home'))
+    logger.info("File uploaded")
     
     file = request.files['file']
     filename = secure_filename(file.filename)
     original_path = os.path.join(DETECTION_UPLOAD_FOLDER, filename)
     file.save(original_path)
+    logger.info(f"File saved to {original_path}")
     
+    logger.info("We start Running detection")
     # Run YOLO + SAM detection and get detected image and void details
     detected_img, areas = run_detection(yolo_model, sam_predictor, original_path)
+    logger.info("Detection completed")
     
     # Save the processed result image
     result_filename = f'result_{filename}'
     result_path = os.path.join(DETECTION_UPLOAD_FOLDER, result_filename)
     cv2.imwrite(result_path, detected_img)
+    logger.info(f"Result saved to {result_path}")
     
     # Pass the result image path and areas to the result template
     return render_template('result.html', result_image=result_filename, areas=areas, original_image=filename)
@@ -165,7 +174,7 @@ def start_training():
         print(f"Dataset path: {DATASET_PATH}")
         
         # Start training with dataset configuration
-        results = model.train(data=DATASET_PATH, epochs=10, imgsz=640)
+        results = model.train(data=DATASET_PATH, epochs=3, imgsz=640)
 
         # Find the most recent training directory by sorting based on creation time
         runs_detect_path = os.path.join(PROJECT_ROOT, 'runs', 'detect')
@@ -252,5 +261,6 @@ def serve_runs(filename):
         return "Error serving file", 500
     
 if __name__ == '__main__':
-    # app.run(debug=True)
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
+    app.run(debug=True)
+    # port = int(os.environ.get("PORT", 5000))
+    # app.run(host="0.0.0.0", port=port)
