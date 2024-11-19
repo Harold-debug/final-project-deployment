@@ -9,9 +9,8 @@ Quality control is of vital importance during electronics production. As the met
 - [Architecture](#architecture)
 - [Installation](#installation)
 - [Usage](#usage)
-- [File Structure](#file-structure)
-- [Contributing](#contributing)
-- [License](#license)
+- [Images](#images)
+
 
 ## Introduction
 
@@ -91,3 +90,18 @@ The application follows a modular architecture with the following components:
 4. **Start training the YOLO model**:
    - Click the "Start Training" button.
    - Monitor the training progress and view the results.
+
+## Project Images
+
+### Home
+<img width="1470" alt="Screenshot 2024-11-19 at 01 49 38" src="https://github.com/user-attachments/assets/212b4926-a1be-4be0-ab72-fd765b34f2f0">
+
+### Labeling Interface
+<img width="1470" alt="Screenshot 2024-11-19 at 01 53 34" src="https://github.com/user-attachments/assets/dfda8c6c-69b4-474f-b9b3-c7930f8c2622">
+
+### Detection Results
+<img width="1470" alt="Screenshot 2024-11-19 at 01 59 04" src="https://github.com/user-attachments/assets/129e2c5c-c118-4d6a-a1c2-077f1794da6a">
+
+
+<img width="1470" alt="Screenshot 2024-11-19 at 01 59 10" src="https://github.com/user-attachments/assets/3a90f056-3941-4191-a242-82625583b881">
+
