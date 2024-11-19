@@ -97,7 +97,6 @@ The application follows a modular architecture with the following components:
 <img width="1470" alt="Screenshot 2024-11-19 at 01 49 38" src="https://github.com/user-attachments/assets/212b4926-a1be-4be0-ab72-fd765b34f2f0">
 
 ### Labeling Interface
-![Labeling Interface](./project_images/Screenshot_2023-11-19_at_01.53.34.png?raw=true)
 <img width="1470" alt="Screenshot 2024-11-19 at 01 53 34" src="https://github.com/user-attachments/assets/dfda8c6c-69b4-474f-b9b3-c7930f8c2622">
 
 ### Detection Results
